@@ -1,0 +1,7 @@
+---
+title: "Time Series Analysis"
+author: "Christopher Lovell"
+date: "Friday, April 17, 2015"
+output: html_document
+---
+
