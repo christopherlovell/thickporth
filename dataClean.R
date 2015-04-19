@@ -17,6 +17,8 @@ data.subset<-data.subset$results
 
 # missing meta data for this review, remove
 data.subset<-data.subset[-7637]
+# missing content for these reviews, remove
+data.subset<-data.subset[-c(6818,7639,8464,15840)]
 
 # filter out reviews of multiple albums, since these are usually historic, 
 # and cause data issues later
@@ -33,7 +35,7 @@ while(i<length(data.subset)){
   i<-i+1
 }
 
-rm(data,data.subset)
+rm(i,data,data.subset)
 
 # review content
 reviews<-lapply(data.filtered,function(x) x$review)
@@ -63,20 +65,17 @@ corp<-addToMetaData(corp,vector = published,tag = "publish_date")
 
 rm(reviews,years,albums,authors,ratings,labels,covers,bands,published)
 
-corp<-tm_map(corp,content_transformer(removePunctuation))
-corp<-tm_map(corp,content_transformer(removeNumbers))
+corp.clean<-tm::tm_map(corp,content_transformer(tolower))
+corp.clean<-tm::tm_map(corp.clean,content_transformer(removeWords),stopwords("english"))
+corp.clean<-tm::tm_map(corp.clean,content_transformer(removePunctuation),preserve_intra_word_dashes = T)
+corp.clean<-tm::tm_map(corp.clean,content_transformer(removeNumbers))
+corp.clean<-tm::tm_map(corp.clean,content_transformer(stripWhitespace))
 
-corp<-tm_map(corp,content_transformer(tolower))
+#corp.clean<-tm::tm_map(corp.clean,stemDocument)
 
-tdm<-TermDocumentMatrix(corp)
+tdm<-TermDocumentMatrix(corp.clean)
+tdm.2<-Narrative::tdmGenerator(seq(1,2,by=1),corp.clean)
+#tdm<-tm::weightTfIdf(tdm)
 
 #save.image(file = "corpus")
-
-search.result<-as.matrix(t(tdm["world",]))
-
-search.xts<-Narrative::xtsGenerate(do.call(c,meta(corp,"publish_date")),search.result)
-search.xts.aggregate<-xtsAggregate(search.xts,time_aggregate = "yearly",normalisation = T)
-
-p<-autoplot(na.approx(search.xts.aggregate),facet=NULL)
-p+ylab("Match %")+xlab("Year")
 

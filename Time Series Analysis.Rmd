@@ -5,3 +5,124 @@ date: "Friday, April 17, 2015"
 output: html_document
 ---
 
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+wd<-"C:/Users/Chris/Documents/Data Science Files/thickporth/"
+#wd<-"Documents/Misc/Pitchfork Reviews/"
+setwd(wd)
+
+load(file=paste(wd,"corpus",sep=""))
+
+library(Narrative) # use install_github with private auth key to install
+library(jsonlite)
+library(tm)
+library(xts)
+library(zoo)
+library(ggplot2)
+
+Sys.setenv(JAVA_HOME='C:\\Program Files\\Java\\jre1.8.0_45') # for 64-bit version
+library(rJava)
+library(RWeka)
+```
+
+Search for mentions of different genres over time.
+
+```{r}
+search.result<-as.matrix(t(tdm["pc",]))
+
+search.xts<-Narrative::xtsGenerate(do.call(c,meta(corp,"publish_date")),search.result)
+search.xts.aggregate<-xtsAggregate(search.xts,time_aggregate = "yearly",normalisation = F)
+
+p<-autoplot(na.approx(search.xts.aggregate),facet=NULL)
+p+ylab("Absolute Count")+xlab("Year")
+```
+
+```{r}
+search.result<-as.matrix(t(tdm["house",]))
+
+search.xts<-Narrative::xtsGenerate(do.call(c,meta(corp,"publish_date")),search.result)
+search.xts.aggregate<-xtsAggregate(search.xts,time_aggregate = "yearly",normalisation = T)
+
+p<-autoplot(na.approx(search.xts.aggregate),facet=NULL)
+p+ylab("Normalised Count")+xlab("Year")
+```
+
+```{r}
+terms<-c("dubstep","brostep")
+
+xts.search.aggregate<-lapply(terms,function(x){
+  search.result<-as.matrix(t(tdm.2[x,]))
+  xts.search<-Narrative::xtsGenerate(do.call(c,meta(corp.clean,"publish_date")),search.result)
+  Narrative::xtsAggregate(xts.search,time_aggregate="monthly",normalisation = F)
+})
+
+sent.zoo<-as.zoo(do.call(cbind,xts.search.aggregate))
+names(sent.zoo)<-terms
+
+p<-autoplot(na.approx(sent.zoo),facet=NULL,main=paste("Term search: ",paste(terms,collapse = ", "),sep=""))
+p+ylab("Absolute Count")+xlab("Year")
+```
+
+Search for multiple terms.
+
+```{r}
+terms<-c("pc music","pc-music")
+search.result<-as.matrix(t(tdm.2[terms,]))
+
+search.xts<-Narrative::xtsGenerate(do.call(c,meta(corp,"publish_date")),search.result)
+search.xts.aggregate<-xtsAggregate(search.xts,time_aggregate = "quarterly",normalisation = F)
+
+p<-autoplot(na.approx(search.xts.aggregate),facet=NULL,main=paste("Term search: ",terms,sep=""))
+p+ylab("Absolute Count")+xlab("Year")
+```
+
+```{r}
+terms<-c("trap")
+search.result<-as.matrix(t(tdm.2[terms,]))
+
+search.xts<-Narrative::xtsGenerate(do.call(c,meta(corp,"publish_date")),search.result)
+search.xts.aggregate<-xtsAggregate(search.xts,time_aggregate = "yearly",normalisation = T)
+
+p<-autoplot(na.approx(search.xts.aggregate),facet=NULL,main=paste("Term search: ",terms,sep=""))
+p+ylab("Absolute Count")+xlab("Year")
+```
+
+```{r}
+terms<-c("nu-rave","new-rave","new rave","nu rave")
+search.result<-as.matrix(t(tdm.2[terms,]))
+
+search.xts<-Narrative::xtsGenerate(do.call(c,meta(corp,"publish_date")),search.result)
+search.xts.aggregate<-xtsAggregate(search.xts,time_aggregate = "yearly",normalisation = F)
+
+p<-autoplot(na.approx(search.xts.aggregate),facet=NULL,main=paste("Aggregate term search (yearly): ",paste(terms,collapse = ", "),sep=""))
+p+ylab("Absolute Count")+xlab("Year")
+```
+
+
+```{r}
+radiohead_assocs<-findAssocs(tdm,"radiohead",0.3)
+```
+
+Find the most frequent terms.
+
+```{r}
+findFreqTerms(tdm.2,lowfreq = 500)
+```
+
+Filter by meta data
+- what are the most common words found in high scoring and low scoring reviews?
+- what are the most common words used by a particular review author?
+
+```{r}
+findFreqTerms(tdm.2[,meta(corp,tag="rating")>9],lowfreq = 300)
+
+findFreqTerms(tdm.2[,meta(corp,tag="rating")<2.5],lowfreq = 150)
+```
+
+```{r}
+library(cba)
+# association rule mining document term matrices
+
+```
+
+
+
