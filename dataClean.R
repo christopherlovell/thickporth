@@ -1,6 +1,7 @@
-wd<-"C:/Users/Chris/Documents/Data Science Files/thickporth/"
+wd<-"/home/chris/Projects/thickporth/"
 #wd<-"Documents/Misc/Pitchfork Reviews/"
 setwd(wd)
+rm(wd)
 
 library(Narrative) # use install_github with private auth key to install
 library(jsonlite)
@@ -41,40 +42,39 @@ rm(i,data,data.subset)
 reviews<-lapply(data.filtered,function(x) x$review)
 
 # meta data as data frames
-years<-lapply(data.filtered,function(x) x$year)
-albums<-lapply(data.filtered,function(x) x$album)
-authors<-lapply(data.filtered,function(x) x$author)
-ratings<-lapply(data.filtered,function(x) x$rating)
-labels<-lapply(data.filtered,function(x) x$label)
-covers<-lapply(data.filtered,function(x) x$album_cover)
-bands<-lapply(data.filtered, function(x) x$band)
-published<-lapply(data.filtered,function(x) as.POSIXct(x$publish_date,format="%B %d, %Y"))
+years <- lapply(data.filtered, function(x) x$year)
+albums <- lapply(data.filtered, function(x) x$album)
+authors <- lapply(data.filtered, function(x) x$author)
+ratings <- lapply(data.filtered, function(x) x$rating)
+labels <- lapply(data.filtered, function(x) x$label)
+covers <- lapply(data.filtered, function(x) x$album_cover)
+bands <- lapply(data.filtered, function(x) x$band)
+published <- lapply(data.filtered, function(x) as.POSIXct(x$publish_date,format="%B %d, %Y"))
 
 rm(data.filtered)
 
 corp<-Corpus(VectorSource(reviews))
 
-corp<-addToMetaData(corp,vector = years,tag = "year")
-corp<-addToMetaData(corp,vector = albums,tag = "album")
-corp<-addToMetaData(corp,vector = authors,tag = "author")
-corp<-addToMetaData(corp,vector = ratings,tag = "rating")
-corp<-addToMetaData(corp,vector = labels,tag = "label")
-corp<-addToMetaData(corp,vector = covers,tag = "cover")
-corp<-addToMetaData(corp,vector = bands,tag = "band")
-corp<-addToMetaData(corp,vector = published,tag = "publish_date")
+corp <- addToMetaData(corp, vector = years,tag = "year")
+corp <- addToMetaData(corp, vector = albums,tag = "album")
+corp <- addToMetaData(corp, vector = authors,tag = "author")
+corp <- addToMetaData(corp, vector = ratings,tag = "rating")
+corp <- addToMetaData(corp, vector = labels,tag = "label")
+corp <- addToMetaData(corp, vector = covers,tag = "cover")
+corp <- addToMetaData(corp, vector = bands,tag = "band")
+corp <- addToMetaData(corp, vector = published,tag = "publish_date")
 
 rm(reviews,years,albums,authors,ratings,labels,covers,bands,published)
 
-corp.clean<-tm::tm_map(corp,content_transformer(tolower))
-corp.clean<-tm::tm_map(corp.clean,content_transformer(removeWords),stopwords("english"))
-corp.clean<-tm::tm_map(corp.clean,content_transformer(removePunctuation),preserve_intra_word_dashes = T)
-corp.clean<-tm::tm_map(corp.clean,content_transformer(removeNumbers))
-corp.clean<-tm::tm_map(corp.clean,content_transformer(stripWhitespace))
-
+corp.clean <- tm::tm_map(corp, content_transformer(tolower))
+corp.clean <- tm::tm_map(corp.clean, content_transformer(removeWords),stopwords("english"))
+corp.clean <- tm::tm_map(corp.clean, content_transformer(removePunctuation),preserve_intra_word_dashes = T)
+corp.clean <- tm::tm_map(corp.clean, content_transformer(removeNumbers))
+corp.clean <- tm::tm_map(corp.clean, content_transformer(stripWhitespace))
 #corp.clean<-tm::tm_map(corp.clean,stemDocument)
 
-tdm<-TermDocumentMatrix(corp.clean)
-tdm.2<-Narrative::tdmGenerator(seq(1,2,by=1),corp.clean)
+tdm <- TermDocumentMatrix(corp.clean)
+#tdm.2<-Narrative::tdmGenerator(seq(1,2,by=1),corp.clean)
 #tdm<-tm::weightTfIdf(tdm)
 
 #save.image(file = "corpus")
